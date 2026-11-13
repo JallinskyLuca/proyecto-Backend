@@ -1,71 +1,69 @@
-const { NOTIMP } = require('dns');
-const { Router } = require('express')
-const fs = require('fs') //fileSystem
-const path = require('path');
-const { measureMemory } = require('vm');
+import { Router } from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import verificarToken from '../middlewares/authMiddleware.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = Router();
-const filePath = path.join(__dirname, '../data/productos.json')
+const filePath = path.join(__dirname, '../data/productos.json');
 
 const leerProductos = () => {
     const data = fs.readFileSync(filePath, 'utf-8');
     return JSON.parse(data);
-}
+};
 
 const guardarProductos = (productos) => {
     fs.writeFileSync(filePath, JSON.stringify(productos, null, 2), 'utf-8');
-}
+};
 
-
-// 1 GET para obtener todos los usuarios
+// 1. GET para obtener todos los productos
 router.get('/', (req, res) => {
     const productos = leerProductos();
-    res.status(200).json({ status : 'succes', data : productos});
+    res.status(200).json({ status: 'success', data: productos });
 });
 
-
-// 1.1 GET para obtener producto por id 
+// 1.1. GET para obtener producto por id 
 router.get('/:id', (req, res) => {
     const productos = leerProductos();
     const id = parseInt(req.params.id);
 
     if(isNaN(id)) {
         return res.status(400).json({
-            status : 'error', 
-            message : 'El ID debe ser un numero valido'
+            status: 'error', 
+            message: 'El ID debe ser un numero valido'
         });
     }
 
     const producto = productos.find(p => p.id === id);
 
     if(!producto) {
-        return res.status(400).json({ 
-            status : 'Error',
-            message : 'Producto no encontrado'
+        return res.status(404).json({ 
+            status: 'error',
+            message: 'Producto no encontrado'
         });
     }
 
     res.status(200).json({
-        status : 'succes',
-        data : producto
-    })
-})
+        status: 'success',
+        data: producto
+    });
+});
 
-
-// 2 POST para crear un nuevo producto
-
-router.post('/', (req, res) => {
-    const {nombre, categoria, precio} = req.body;
+// 2. POST para crear un nuevo producto (Protegido)
+router.post('/', verificarToken, (req, res) => {
+    const { nombre, categoria, precio } = req.body;
 
     if(!nombre || !categoria || !precio) {
         return res.status(400).json({
-            status : 'Error',
-            message : 'Nombre, categoria y precio son obligatorios para crear un nuevo productos en la base de datos'
-        })
+            status: 'error',
+            message: 'Nombre, categoria y precio son obligatorios para crear un nuevo producto en la base de datos'
+        });
     }
 
     const productos = leerProductos();
-    // Calculo del ID
     let nuevoId;
     if (productos.length > 0) {
         const ultimoProducto = productos[productos.length - 1];
@@ -75,35 +73,34 @@ router.post('/', (req, res) => {
     }
 
     const nuevoProducto = {
-        id : nuevoId,
-        nombre : nombre.trim(),
-        categoria : categoria.trim(),
-        precio : Number(precio)
-    }
+        id: nuevoId,
+        nombre: nombre.trim(),
+        categoria: categoria.trim(),
+        precio: Number(precio)
+    };
 
     productos.push(nuevoProducto);
     guardarProductos(productos);
 
-    res.status(201).json({ status : 'succes', data : nuevoProducto})
+    res.status(201).json({ status: 'success', data: nuevoProducto });
 });
 
-// 3 PUT para actualizar un producto.
-
-router.put('/:id', (req, res) => {
-    const id = parseInt(req.params.id)
-    const {nombre, categoria, precio} = req.body;
+// 3. PUT para actualizar un producto (Protegido)
+router.put('/:id', verificarToken, (req, res) => {
+    const id = parseInt(req.params.id);
+    const { nombre, categoria, precio } = req.body;
 
     if(isNaN(id)) {
         return res.status(400).json({
-            status : 'error',
-            message : 'El id debe ser un numero valido'
+            status: 'error',
+            message: 'El id debe ser un numero valido'
         });
     }
 
     if(!nombre || !categoria || !precio) {
         return res.status(400).json({
-            status : 'Error',
-            mesage : 'Para usar el PUT, todos los campos son obligatorios (nombre, categoria, precio). '
+            status: 'error',
+            message: 'Para usar el PUT, todos los campos son obligatorios (nombre, categoria, precio).'
         });
     }
 
@@ -112,8 +109,8 @@ router.put('/:id', (req, res) => {
 
     if(index === -1) {
         return res.status(404).json({
-            status : 'error', 
-            message : 'Producto no encontrado'
+            status: 'error', 
+            message: 'Producto no encontrado'
         });
     }
 
@@ -124,61 +121,54 @@ router.put('/:id', (req, res) => {
         precio: Number(precio)
     };
 
+    // ¡Guardamos los cambios en el archivo JSON!
+    guardarProductos(productos);
+
     res.status(200).json({
         status: 'success',
         data: productos[index]
     });
 });
 
-
-// 4 PATCH
-router.patch('/:id', (req, res) => {
+// 4. PATCH para actualizar parcialmente (Protegido)
+router.patch('/:id', verificarToken, (req, res) => {
     const id = parseInt(req.params.id);
-    const {nombre, categoria, precio} = req.body;
+    const { nombre, categoria, precio } = req.body;
 
     if(isNaN(id)) {
         return res.status(400).json({
             status: 'error',
-            mesage: 'El ID debe ser un numero valido'
+            message: 'El ID debe ser un numero valido'
         });
     }
 
     const productos = leerProductos();
-
     const index = productos.findIndex(p => p.id === id);
     
-    //Si index es -1, significa que el .findIndex() no encontró ningún producto con ese ID
     if(index === -1) {
         return res.status(404).json({
-            status: 'Error',
+            status: 'error',
             message: 'Producto no encontrado'
         });
     }
 
-    //Si el campo viene en el body lo actualizamos, sino dejamos el que ya tenia
-
-    // 1. Guardamos en una variable el producto tal como está ahora
     const productoActual = productos[index];
 
-    // 2. Evaluamos el nombre con un if tradicional
-    let nuevoNombre = productoActual.nombre; // Por defecto dejamos el viejo
+    let nuevoNombre = productoActual.nombre;
     if (nombre) {
-        nuevoNombre = nombre.trim(); // Si mandaron uno nuevo, lo usamos
+        nuevoNombre = nombre.trim();
     }
 
-    // 3. Evaluamos la categoría con un if tradicional
-    let nuevaCategoria = productoActual.categoria; // Por defecto dejamos la vieja
+    let nuevaCategoria = productoActual.categoria;
     if (categoria) {
-        nuevaCategoria = categoria.trim(); // Si mandaron una nueva, la usamos
+        nuevaCategoria = categoria.trim();
     }
 
-    // 4. Evaluamos el precio con un if tradicional
-    let nuevoPrecio = productoActual.precio; // Por defecto dejamos el viejo
+    let nuevoPrecio = productoActual.precio;
     if (precio !== undefined) {
-        nuevoPrecio = Number(precio); // Si mandaron uno nuevo, lo usamos y convertimos a número
+        nuevoPrecio = Number(precio);
     }
 
-    // 5. Actualizamos el producto con los valores ya decididos
     productos[index] = {
         id: id,
         nombre: nuevoNombre,
@@ -189,17 +179,18 @@ router.patch('/:id', (req, res) => {
     guardarProductos(productos);
 
     res.status(200).json({
-        status: 'error',
+        status: 'success',
         data: productos[index]
     });
 });
-// 5 DELETE
-router.delete('/:id', (req, res) => {
+
+// 5. DELETE para eliminar un producto (Protegido)
+router.delete('/:id', verificarToken, (req, res) => {
     const id = parseInt(req.params.id);
 
     if(isNaN(id)) {
         return res.status(400).json({
-            status: 'Error',
+            status: 'error',
             message: 'El ID debe ser un numero valido'
         });
     }
@@ -207,23 +198,21 @@ router.delete('/:id', (req, res) => {
     const productos = leerProductos();
     const index = productos.findIndex(p => p.id === id);
 
-    if (index === - 1) {
+    if (index === -1) {
         return res.status(404).json({
-            status: 'Error',
-            message: 'producto no encontrado'
+            status: 'error',
+            message: 'Producto no encontrado'
         });
     }
 
     const productoEliminado = productos.splice(index, 1);
-    guardarProductos(productos)
+    guardarProductos(productos);
 
-    //status, message, data
     res.status(200).json({
-        staus: 'Sucess',
-        message: 'El producto se a eliminado con exito!',
+        status: 'success',
+        message: '¡El producto se ha eliminado con éxito!',
         data: productoEliminado[0]
     });
 });
 
-
-module.exports = router;
+export default router;

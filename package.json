@@ -1,15 +1,14 @@
 {
-  "name": "mi-api-crud",
+  "name": "proyecto-backend",
   "version": "1.0.0",
+  "type": "module", 
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "dev": "node --watch src/app.js"
   },
   "dependencies": {
-    "express": "^5.3.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
   }
 }

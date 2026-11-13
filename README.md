@@ -1,6 +1,17 @@
-### CRUD TIENDA DE PRODUCTOS ELECTRONICOS ###
-futuros updates -> auth de usuario
+librerias:
+express
+bcryptjs
+jsonwebtoken
 
+//modularizar (que el server sea solo server)
+//agregar Funciones features
+//constole de IP para peticiones (bots) input(invisible)
+//se puede borrar usuario(solo el id)
+//cambiar contraseña
+//recurpera contraseña 
+//Crear una base de datos
+
+### CRUD TIENDA DE PRODUCTOS ELECTRONICOS ###
 
 # 1) configurar el entorno de desarrollo y crear carpetas del proyecto.
 
