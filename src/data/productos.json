@@ -1,0 +1,56 @@
+[
+    {
+        "id": 1,
+        "nombre" : "Teclado mecanico",
+        "categoria" : "Perifericos",
+        "precio" : 25000
+    }, 
+    {
+        "id" : 2,
+        "nombre" : "Auriculares Gamer",
+        "categoria" : "Perifericos",
+        "precio" : 15000
+     },
+     {
+        "id" : 3,
+        "nombre": "Mouse Gamer",
+        "categoria" : "Perifericos",
+        "precio" : 19000
+     },
+     {
+        "id" : 4,
+        "nombre": "Placa Arduino UNO",
+        "categoria" : "Electronica",
+        "precio" : 32000
+     },
+     {
+        "id" : 5,
+        "nombre": "Placa ESP 32",
+        "categoria" : "Electronica",
+        "precio" : 40000
+     },
+     {
+        "id" : 6,
+        "nombre": "Sensor de proximidad",
+        "categoria" : "Electronica",
+        "precio" : 8000
+     },
+     {
+        "id" : 7,
+        "nombre": "AMD Ryzen 5 5600",
+        "categoria" : "Componentes",
+        "precio" : 198000
+     },
+     {
+        "id" : 8,
+        "nombre": "RAM Corsair 2x16gb 3200mhz",
+        "categoria" : "Componentes",
+        "precio" : 130000
+     },
+     {
+        "id" : 9,
+        "nombre": " RTX 3060 ti MSI Gaming X TRIO 8GB vram ",
+        "categoria" : "Componentes",
+        "precio" : 490000
+     }
+]
